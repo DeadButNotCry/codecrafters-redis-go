@@ -28,13 +28,21 @@ func main() {
 		os.Exit(1)
 	}
 	con, err := l.Accept()
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
-	}
 
-	fmt.Println(readDataFromConn(&con))
-	resp := "+PONG\r\n"
-	con.Write([]byte(resp))
-	con.Close()
+	for {
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+			os.Exit(1)
+		}
+
+		fmt.Println(readDataFromConn(&con))
+
+		resp := "+PONG\r\n"
+		_, err = con.Write([]byte(resp))
+
+		if err != nil {
+			fmt.Println("Error while writing: ", err.Error())
+			os.Exit(1)
+		}
+	}
 }
