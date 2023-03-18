@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
 )
 
 func readDataFromConn(con_p *net.Conn) string {
-	data := make([]byte, 0)
+	data := make([]byte, 1024)
 	con := *con_p
 	_, err := con.Read(data)
 	if err != nil {
@@ -29,20 +30,26 @@ func main() {
 	}
 	con, err := l.Accept()
 
+	if err != nil {
+		fmt.Println("Error accepting connection: ", err.Error())
+		os.Exit(1)
+	}
+	fmt.Println("Start work with connection")
+	defer con.Close()
 	for {
-		if err != nil {
-			fmt.Println("Error accepting connection: ", err.Error())
-			os.Exit(1)
+		buf := make([]byte, 1024)
+
+		if _, err := con.Read(buf); err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				fmt.Println("error reading from client: ", err.Error())
+				os.Exit(1)
+			}
 		}
 
-		fmt.Println(readDataFromConn(&con))
-
-		resp := "+PONG\r\n"
-		_, err = con.Write([]byte(resp))
-
-		if err != nil {
-			fmt.Println("Error while writing: ", err.Error())
-			os.Exit(1)
-		}
+		// Let's ignore the client's input for now and hardcode a response.
+		// We'll implement a proper Redis Protocol parser in later stages.
+		con.Write([]byte("+PONG\r\n"))
 	}
 }
