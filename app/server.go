@@ -28,12 +28,18 @@ func main() {
 		fmt.Println("Failed to bind to port 6379")
 		os.Exit(1)
 	}
-	con, err := l.Accept()
-
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
+	for {
+		con, err := l.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+			os.Exit(1)
+		}
+		go handle(&con)
 	}
+}
+
+func handle(con_p *net.Conn) {
+	con := *con_p
 	fmt.Println("Start work with connection")
 	defer con.Close()
 	for {
@@ -52,4 +58,5 @@ func main() {
 		// We'll implement a proper Redis Protocol parser in later stages.
 		con.Write([]byte("+PONG\r\n"))
 	}
+
 }
